@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.pipernav.app",
+      "sha256_cert_fingerprints": ["4F:3C:FD:7E:F4:75:BF:B1:5E:74:2C:70:3B:83:A2:17:D5:E1:00:FA:3D:E5:B4:11:BE:77:93:5B:63:54:BA:25"]
+    }
+  }
+]

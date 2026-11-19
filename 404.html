@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Piper Nav route</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#12302E; --ink2:#3D6461; --teal:#0E6B66; --tint:#EEF5F3; --line:#D7E6E3; --bg:#F6FAF9; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Geist, system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+  main { max-width: 520px; margin: 0 auto; padding: 32px 20px 48px; display: grid; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { width: 44px; height: 44px; }
+  .brand span { font-weight: 700; font-size: 20px; }
+  .card { background: #fff; border-radius: 18px; padding: 20px; display: grid; gap: 14px; }
+  h1 { font-size: 24px; line-height: 1.2; margin: 0; font-weight: 600; }
+  .muted { color: var(--ink2); font-size: 15px; margin: 0; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .stat b { display: block; font-size: 20px; font-weight: 600; }
+  .stat small { color: var(--ink2); font-size: 12px; }
+  svg { width: 100%; height: 220px; background: var(--tint); border-radius: 14px; }
+  .btn { display: block; text-align: center; text-decoration: none; font-weight: 600; font-size: 17px; padding: 15px; border-radius: 12px; }
+  .primary { background: var(--teal); color: #fff; }
+  .secondary { background: var(--tint); color: var(--ink); }
+  .note { font-size: 13px; color: var(--ink2); line-height: 1.5; margin: 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><img src="/piper-nav.png" alt=""><span>Piper Nav</span></div>
+  <div class="card" id="card">
+    <h1 id="title">Opening route</h1>
+    <p class="muted" id="by"></p>
+    <svg id="shape" viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet" aria-label="Route shape"></svg>
+    <div class="stats">
+      <div class="stat"><b id="dist">–</b><small>distance</small></div>
+      <div class="stat"><b id="dur">–</b><small>total duration</small></div>
+      <div class="stat"><b id="wps">–</b><small>waypoints</small></div>
+    </div>
+  </div>
+  <a class="btn primary" id="open" href="#">Open in Piper Nav</a>
+  <a class="btn secondary" href="https://github.com/Sabeel84/piper-nav-packs/releases/download/app/piper-nav.apk">Download Piper Nav for Android</a>
+  <p class="note">Piper Nav is a free offline desert navigation app for our group. After installing, allow "Install unknown apps" if asked, sign in, then tap the link again to save this route.</p>
+</main>
+<script>
+(function () {
+  var KEY = 'AIzaSyCIsQbHtGgsJ8VSkYA6WbYiElBzZvUPuxU';
+  var m = location.pathname.match(/^\/r\/([A-Za-z0-9]{5,12})/);
+  var title = document.getElementById('title');
+  if (!m) { title.textContent = 'Page not found'; document.getElementById('open').style.display = 'none'; return; }
+  var code = m[1];
+  var link = 'https://sabeel84.github.io/r/' + code;
+  var apk = 'https://github.com/Sabeel84/piper-nav-packs/releases/download/app/piper-nav.apk';
+  document.getElementById('open').href = 'intent://sabeel84.github.io/r/' + code + '#Intent;scheme=https;package=com.pipernav.app;S.browser_fallback_url=' + encodeURIComponent(apk) + ';end';
+
+  function decode(str) {
+    var pts = [], i = 0, lat = 0, lon = 0;
+    function dec() { var s = 0, r = 0, b; do { b = str.charCodeAt(i++) - 63; r |= (b & 31) << s; s += 5; } while (b >= 32); return r & 1 ? ~(r >> 1) : r >> 1; }
+    while (i < str.length) { lat += dec(); lon += dec(); pts.push([lon / 1e5, lat / 1e5]); }
+    return pts;
+  }
+  function v(f, k) { var x = f && f[k]; return x ? (x.stringValue != null ? x.stringValue : x.doubleValue != null ? x.doubleValue : x.integerValue != null ? x.integerValue : x.timestampValue) : null; }
+  function dur(s) { s = Math.round(s || 0); var h = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60); return h ? h + 'h ' + (mm < 10 ? '0' : '') + mm + 'm' : mm + ' min'; }
+  function draw(pts) {
+    if (pts.length < 2) return;
+    var lat0 = pts[0][1] * Math.PI / 180, xs = pts.map(function (p) { return p[0] * Math.cos(lat0); }), ys = pts.map(function (p) { return p[1]; });
+    var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+    var s = Math.min(90 / ((maxX - minX) || 1e-6), 50 / ((maxY - minY) || 1e-6));
+    var ox = (100 - (maxX - minX) * s) / 2, oy = (60 - (maxY - minY) * s) / 2;
+    var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + (ox + (xs[i] - minX) * s).toFixed(2) + ' ' + (60 - oy - (ys[i] - minY) * s).toFixed(2); }).join(' ');
+    document.getElementById('shape').innerHTML =
+      '<path d="' + d + '" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="' + d + '" fill="none" stroke="#0E6B66" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+
+  fetch('https://firestore.googleapis.com/v1/projects/piper-nav/databases/(default)/documents/routes/' + code + '?key=' + KEY)
+    .then(function (r) { if (!r.ok) throw new Error(r.status === 404 ? 'This link has been removed or is wrong.' : 'Could not load the route.'); return r.json(); })
+    .then(function (doc) {
+      var f = doc.fields;
+      title.textContent = v(f, 'title') || 'Shared route';
+      document.title = title.textContent + ', Piper Nav';
+      var when = v(f, 'created_at');
+      document.getElementById('by').textContent = 'From ' + (v(f, 'author_name') || 'a Piper Nav user') + (when ? ', ' + new Date(when).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+      document.getElementById('dist').textContent = Number(v(f, 'distance_km') || 0).toFixed(1) + ' km';
+      document.getElementById('dur').textContent = v(f, 'duration_s') ? dur(Number(v(f, 'duration_s'))) : '–';
+      document.getElementById('wps').textContent = ((f.waypoints && f.waypoints.arrayValue && f.waypoints.arrayValue.values) || []).length;
+      draw(decode(v(f, 'track') || ''));
+    })
+    .catch(function (e) { title.textContent = e.message; });
+})();
+</script>
+</body>
+</html>
