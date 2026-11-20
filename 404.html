@@ -54,7 +54,7 @@
   var code = m[1];
   var link = 'https://sabeel84.github.io/r/' + code;
   var apk = 'https://github.com/Sabeel84/piper-nav-packs/releases/download/app/piper-nav.apk';
-  document.getElementById('open').href = 'intent://sabeel84.github.io/r/' + code + '#Intent;scheme=https;package=com.pipernav.app;S.browser_fallback_url=' + encodeURIComponent(apk) + ';end';
+  document.getElementById('open').href = 'intent://r/' + code + '#Intent;scheme=pipernav;package=com.pipernav.app;S.browser_fallback_url=' + encodeURIComponent(apk) + ';end';
 
   function decode(str) {
     var pts = [], i = 0, lat = 0, lon = 0;
